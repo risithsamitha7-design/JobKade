@@ -90,35 +90,53 @@ To keep code clean and organized (Separation of Concerns):
 
 ---
 
-### 2. `js/auth.js` (Login, Register & Demo Logins)
+### 2. `js/auth.js` (Login, Register & Form Validation)
 *Runs on `auth/login.html` and `auth/register.html`.*
 
 #### What does it do?
-- Submits email and password to `api/auth.php?action=login`.
-- Saves JWT token and user profile into `localStorage`.
-- Directs users back to `index.html` after login (or resumes where they left off if they clicked "Message Worker").
-- Powers the 1-click **Demo Account Buttons** (Admin, Customer, Worker).
+- Switches between **Customer** and **Worker** registration forms dynamically.
+- Submits credentials to `api/auth.php?action=login` and stores the JWT session token.
+- Validates user input client-side (Sri Lankan phone regex, password length, required fields).
+- Handles worker registration with trade category selection, NIC, and registration fee modal.
+- Provides live dropzone previews for uploaded verification documents and profile pictures.
 - Toggles password visibility (Eye / Eye-off icon).
 
 #### Key Code Lines & What They Mean:
 
-* **Lines 10–40 (`One-Click Demo Fill Buttons`):**
-  - When you click "Demo Customer", it types `customer@gmail.com` and `customer@123` into the input fields automatically.
-  - When you click "Demo Worker", it fills `sunil.electric@gmail.com` and `worker@123`.
-  - Makes viva presentations fast without manual typing.
+* **Lines 8–58 (`Role Selection & Step Navigation on Register`):**
+  - Listens to clicks on `.role-card` ("I need a service" vs "I offer a service").
+  - Hides the initial role picker card and smoothly reveals the corresponding Customer or Worker form.
+  - Automatically scrolls the form panel to the top so inputs are immediately visible.
+  - Back button (`.back-to-roles`) resets the view so users can change their chosen role.
 
-* **Lines 45–95 (`Login Form Submission`):**
-  - Stops default browser refresh using `e.preventDefault()`.
+* **Lines 60–136 (`Login Form Submission — Real Backend API`):**
+  - Listens to `#login-form` submit and calls `e.preventDefault()` to stop page refresh.
+  - Disables the submit button and shows `"Signing in..."` to prevent double-clicking.
   - Calls `apiFetch('auth.php?action=login', { method: 'POST', body: JSON.stringify({ email, password }) })`.
-  - If backend says success: saves token via `setLoggedInSession()` and redirects to `index.html`.
-  - If backend says error: calls `showToast(data.message, 'error')`.
+  - When backend returns `status === 'success'`: saves the JWT token and user profile into `localStorage` via `setLoggedInSession(token, user)`.
+  - Redirects the user cleanly to `index.html` (or to their previous page if they were in the middle of contacting a worker).
 
-* **Lines 110–180 (`Role Selection in Register`):**
-  - Lets user tap "I need a service" (Customer) or "I offer a service" (Worker).
-  - Switches form inputs dynamically depending on chosen role.
+* **Lines 138–346 (`Worker Registration & One-Time Access Payment`):**
+  - Collects full name, phone (`077...`), email, password, primary service category, and NIC.
+  - Uses `FormData` to support multipart registration.
+  - Triggers the one-time registration access modal (`#worker-payment-modal`) and records activation via `api/wallet.php?action=pay-access`.
+  - Submits worker profile to `api/auth.php?action=register`.
 
-* **Lines 190–215 (`Password Eye Toggle`):**
-  - Switches `<input type="password">` to `<input type="text">` so users can see what they typed.
+* **Lines 348–395 (`Customer Registration Form Submission`):**
+  - Validates full name ($\ge 2$ characters), valid Sri Lankan phone regex (`/^(\+94|0)?[0-9]{9,10}$/`), valid email regex, and minimum 6-character password.
+  - Sends clean JSON payload to `api/auth.php?action=register` using `apiFetch()`.
+
+* **Lines 397–423 (`Dropzone Document Upload Previews`):**
+  - Listens to file input changes on `#nic-upload`, `#police-upload`, and `#qual-upload`.
+  - Calculates file size in Megabytes (`file.size / (1024 * 1024)`) and updates the dropzone label with `✓ Selected: [filename] ([size] MB)`.
+
+* **Lines 425–441 (`Profile Photo Live Preview`):**
+  - Uses HTML5 `FileReader` (`reader.readAsDataURL(file)`) to display the user's avatar image thumbnail on screen before upload.
+
+* **Lines 443–458 (`Password Visibility Toggle`):**
+  - Finds all `.toggle-password` buttons.
+  - Toggles the input between `type="password"` and `type="text"`.
+  - Updates the icon from `eye-off` to `eye` dynamically.
 
 ---
 
@@ -127,39 +145,44 @@ To keep code clean and organized (Separation of Concerns):
 
 #### What does it do?
 - Fetches all user chats from the database (`api/messages.php?action=conversations`).
-- Opens chat history between Customer and Worker (`api/messages.php?action=conversation`).
-- Auto-refreshes (polls) the active chat every **3.5 seconds** so you see new incoming messages without refreshing the page.
-- Marks messages as read (`is_read = 1`) when opened.
-- Automatically scrolls chat to the bottom on new messages.
+- Opens active chat threads with workers or customers (`api/messages.php?action=conversation&with_user_id=`).
+- Dynamically auto-refreshes (polls) the active chat every **3.5 seconds** when the tab is visible.
+- Uses `AbortController` to cancel pending network requests if user quickly switches contacts.
+- Marks messages as read (`is_read = 1`) on the backend.
+- Sends new messages via `POST api/messages.php?action=send` without reloading the page.
 
 #### Key Code Lines & What They Mean:
 
-* **Lines 54–60 (`State Variables`):**
-  - `activePartnerId`: The User ID of the person you are currently chatting with.
-  - `pollInterval`: The background timer that checks for new messages every 3.5 seconds.
-  - `pollAbortController`: Cancels any pending network requests if user quickly clicks a different contact, avoiding memory lag.
+* **Lines 21–46 (`Authentication Check`):**
+  - Checks if a valid user session exists. If not logged in, locks the chat interface and shows a clean *"Login Required"* prompt.
+
+* **Lines 51–61 (`Messaging State Variables`):**
+  - `activeUserId`: ID of the person you are chatting with.
+  - `activeJobId`: Optional job reference tied to this chat.
+  - `pollInterval`: Background timer checking for new messages every 3.5s.
+  - `pollAbortController`: Cancels any slow ongoing HTTP request when the user switches contacts to prevent UI lag.
+  - `lastMessageCount`: Avoids unnecessary DOM re-renders if no new message has arrived.
 
 * **Lines 63–82 (`formatTimeHHmm(dateStr)`):**
-  - Converts MySQL database timestamps (`2026-10-05 09:30:00`) into clean human time (`09:30`).
+  - Converts MySQL timestamps (`2026-10-05 09:30:00`) into clean human time (`09:30`).
 
-* **Lines 110–180 (`loadConversationsList()`):**
+* **Lines 176–200 (`loadConversations()`):**
   - Calls `apiFetch('messages.php?action=conversations')`.
-  - Loops through each contact, showing their name, avatar, last message text, and unread badge count.
+  - Loops through contacts showing name, avatar initials, role badge, last message preview, and unread counts.
 
-* **Lines 190–270 (`loadActiveConversation(partnerId)`):**
-  - Calls `apiFetch('messages.php?action=conversation&partner_id=' + partnerId)`.
-  - Checks if message count changed (`lastMessageCount`). If yes, renders the message bubbles.
-  - Renders blue bubbles for outgoing messages (right side) and gray bubbles for incoming messages (left side).
-  - Calls `scrollToBottom()` so you always see the latest message.
+* **Lines 395–431 (`loadThreadMessages(scrollToBottom, signal)`):**
+  - Calls `apiFetch('messages.php?action=conversation&with_user_id=' + activeUserId, { signal })`.
+  - Passes the `AbortController` signal so canceled requests don't cause errors.
+  - Compares `messages.length` with `lastMessageCount` to only redraw when new messages arrive.
 
-* **Lines 280–320 (`startPolling() & stopPolling()`):**
-  - Uses `setInterval(function() { loadActiveConversation(activePartnerId); }, 3500)`.
-  - Checks the database every 3.5 seconds for new messages.
+* **Lines 511–561 (`handleSendMessage()`):**
+  - Reads text from `#chat-input`, validates character limit (max 2,000 characters).
+  - Sends `POST api/messages.php?action=send` with `{ receiver_id, message_text, job_id }`.
+  - Instantly appends the sent bubble and auto-scrolls to the bottom.
 
-* **Lines 350–390 (`sendMessage()`):**
-  - Takes text from `<input id="chat-input">`.
-  - Checks if empty. If valid, sends `POST /api/messages.php?action=send` with `{ receiver_id, message_text }`.
-  - Clears the input field immediately and appends your message to the screen.
+* **Lines 618–626 (`Dynamic Polling Timer`):**
+  - Runs `setInterval()` every 3,500ms (3.5 seconds).
+  - Checks `document.visibilityState === 'visible'` so it pauses polling if the user minimizes or changes browser tabs, saving server bandwidth.
 
 ---
 
