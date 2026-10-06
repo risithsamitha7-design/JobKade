@@ -239,28 +239,15 @@ document.addEventListener('DOMContentLoaded', function () {
    ========================================== */
 
 /**
- * Dynamically determine API Base URL based on deployment path
+ * Dynamically determine API Base URL based on folder depth
  */
 function getApiBaseUrl() {
-  const origin = window.location.origin;
-  if (!origin || origin === 'null' || window.location.protocol === 'file:') {
-    return 'http://localhost/JobKade-main%20(1)/JobKade-main/api/';
-  }
-  let path = window.location.pathname;
-  // If inside subdirectories like /admin/, /auth/, /customer/, /worker/
-  const subdirs = ['/admin/', '/auth/', '/customer/', '/worker/'];
-  for (let i = 0; i < subdirs.length; i++) {
-    const idx = path.toLowerCase().indexOf(subdirs[i]);
-    if (idx !== -1) {
-      path = path.substring(0, idx + 1);
-      break;
-    }
-  }
-  // If path ends with a file (e.g. index.html), trim to directory
-  if (!path.endsWith('/')) {
-    path = path.substring(0, path.lastIndexOf('/') + 1);
-  }
-  return origin + path + 'api/';
+  // If inside a subfolder, go up one level '../api/', otherwise './api/'
+  const isSubfolder = window.location.pathname.includes('/customer/') ||
+                      window.location.pathname.includes('/worker/') ||
+                      window.location.pathname.includes('/admin/') ||
+                      window.location.pathname.includes('/auth/');
+  return isSubfolder ? '../api/' : './api/';
 }
 
 /**
@@ -269,23 +256,30 @@ function getApiBaseUrl() {
 async function apiFetch(endpoint, options) {
   options = options || {};
   const baseUrl = getApiBaseUrl();
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+
+  // Clean endpoint path
+  let cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+  if (cleanEndpoint.startsWith('api/')) {
+    cleanEndpoint = cleanEndpoint.substring(4);
+  }
   const url = endpoint.startsWith('http') ? endpoint : (baseUrl + cleanEndpoint);
 
-  const headers = Object.assign({}, options.headers || {});
+  // Set default JSON headers
+  const headers = options.headers || {};
   if (!headers['Content-Type'] && !(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
 
+  // Attach active JWT token from localStorage if present
   const token = localStorage.getItem('jobkade_token');
   if (token && !headers['Authorization']) {
     headers['Authorization'] = 'Bearer ' + token;
   }
 
-  const config = Object.assign({}, options, { headers: headers });
+  options.headers = headers;
 
   try {
-    const res = await fetch(url, config);
+    const res = await fetch(url, options);
     const data = await res.json();
     return { ok: res.ok, status: res.status, data: data };
   } catch (err) {
@@ -303,8 +297,11 @@ function getAuthToken() {
  */
 function getLoggedInUser() {
   try {
-    var userJson = localStorage.getItem('jodkade_logged_user');
-    return userJson ? JSON.parse(userJson) : null;
+    const userJson = localStorage.getItem('jodkade_logged_user');
+    if (userJson) {
+      return JSON.parse(userJson);
+    }
+    return null;
   } catch (e) {
     return null;
   }
@@ -318,7 +315,7 @@ function setLoggedInSession(token, user) {
     localStorage.setItem('jobkade_token', token);
   }
   if (user) {
-    var normalized = {
+    const normalized = {
       id: user.id || user.user_id,
       name: user.name || user.full_name || 'User',
       username: user.username || '',
@@ -354,8 +351,13 @@ function logoutUser() {
   localStorage.removeItem('jodkade_logged_user');
   localStorage.removeItem('jobkade_user');
   showToast('Logged out successfully.', 'info');
-  var isSubfolder = window.location.pathname.includes('/admin/') || window.location.pathname.includes('/customer/') || window.location.pathname.includes('/worker/') || window.location.pathname.includes('/auth/');
-  setTimeout(function() {
+  
+  const isSubfolder = window.location.pathname.includes('/admin/') || 
+                      window.location.pathname.includes('/customer/') || 
+                      window.location.pathname.includes('/worker/') || 
+                      window.location.pathname.includes('/auth/');
+  
+  setTimeout(function () {
     window.location.href = (isSubfolder ? '../' : '') + 'index.html';
   }, 600);
 }

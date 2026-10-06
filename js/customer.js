@@ -646,49 +646,52 @@ async function loadCustomerJobs() {
           var workerName = inv.worker_name || 'Verified Skilled Worker';
 
           if (invStatus === 'pending') {
-            invoiceBanner = '<div style="margin-top: 14px; padding: 12px 16px; background: linear-gradient(135deg, rgba(89,150,255,0.08), rgba(89,150,255,0.14)); border: 1.5px solid rgba(89,150,255,0.35); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">' +
-              '<div>' +
-                '<div style="font-size:0.8rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em; font-weight:700;"><i data-lucide="receipt" width="14" height="14" style="display:inline;vertical-align:middle;color:var(--primary);margin-right:4px;"></i> Worker Final Price Added</div>' +
-                '<div style="font-size:1.15rem; font-weight:800; color:var(--primary); margin-top:2px;">Rs. ' + invAmount + ' <span style="font-size:0.75rem; font-weight:500; color:var(--text-secondary);">&bull; by ' + workerName + '</span></div>' +
-                (safeNotes ? '<div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">Notes: <em>' + safeNotes + '</em></div>' : '') +
-              '</div>' +
-              '<span class="badge badge-warning" style="font-size:0.8rem; font-weight:700; padding:5px 10px;"><i data-lucide="clock" width="12" height="12" style="display:inline;vertical-align:middle;margin-right:3px;"></i> Payment Due</span>' +
-            '</div>';
+            invoiceBanner = `
+              <div style="margin-top: 14px; padding: 12px 16px; background: linear-gradient(135deg, rgba(89,150,255,0.08), rgba(89,150,255,0.14)); border: 1.5px solid rgba(89,150,255,0.35); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div>
+                  <div style="font-size:0.8rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em; font-weight:700;"><i data-lucide="receipt" width="14" height="14" style="display:inline;vertical-align:middle;color:var(--primary);margin-right:4px;"></i> Worker Final Price Added</div>
+                  <div style="font-size:1.15rem; font-weight:800; color:var(--primary); margin-top:2px;">Rs. ${invAmount} <span style="font-size:0.75rem; font-weight:500; color:var(--text-secondary);">&bull; by ${workerName}</span></div>
+                  ${safeNotes ? `<div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">Notes: <em>${safeNotes}</em></div>` : ''}
+                </div>
+                <span class="badge badge-warning" style="font-size:0.8rem; font-weight:700; padding:5px 10px;"><i data-lucide="clock" width="12" height="12" style="display:inline;vertical-align:middle;margin-right:3px;"></i> Payment Due</span>
+              </div>`;
             
-            payButton = '<button class="btn btn-primary btn-sm btn-pay-job-invoice" data-invoice-id="' + inv.id + '" data-amount="' + rawAmt + '" data-job-title="' + safeTitle + '" data-notes="' + safeNotes + '" style="font-weight:700;"><i data-lucide="credit-card" width="15" height="15"></i> Pay Rs. ' + invAmount + '</button>';
+            payButton = `<button class="btn btn-primary btn-sm btn-pay-job-invoice" data-invoice-id="${inv.id}" data-amount="${rawAmt}" data-job-title="${safeTitle}" data-notes="${safeNotes}" style="font-weight:700;"><i data-lucide="credit-card" width="15" height="15"></i> Pay Rs. ${invAmount}</button>`;
           } else if (invStatus === 'paid') {
             var methodLabel = (inv.payment_method === 'cash') ? 'Paid via Cash' : 'Paid Online (Mockup IPG)';
-            invoiceBanner = '<div style="margin-top: 14px; padding: 12px 16px; background: rgba(102,187,106,0.08); border: 1.5px solid rgba(102,187,106,0.3); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">' +
-              '<div>' +
-                '<div style="font-size:0.8rem; color:var(--success); text-transform:uppercase; letter-spacing:0.04em; font-weight:700;"><i data-lucide="check-circle" width="14" height="14" style="display:inline;vertical-align:middle;margin-right:4px;"></i> Invoice Settled</div>' +
-                '<div style="font-size:1.15rem; font-weight:800; color:var(--success); margin-top:2px;">Rs. ' + invAmount + ' <span style="font-size:0.75rem; font-weight:500; color:var(--text-secondary);">&bull; ' + methodLabel + '</span></div>' +
-              '</div>' +
-              '<span class="badge badge-success" style="font-size:0.8rem; font-weight:700; padding:5px 10px;"><i data-lucide="check" width="12" height="12" style="display:inline;vertical-align:middle;margin-right:3px;"></i> Paid & Completed</span>' +
-            '</div>';
+            invoiceBanner = `
+              <div style="margin-top: 14px; padding: 12px 16px; background: rgba(102,187,106,0.08); border: 1.5px solid rgba(102,187,106,0.3); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div>
+                  <div style="font-size:0.8rem; color:var(--success); text-transform:uppercase; letter-spacing:0.04em; font-weight:700;"><i data-lucide="check-circle" width="14" height="14" style="display:inline;vertical-align:middle;margin-right:4px;"></i> Invoice Settled</div>
+                  <div style="font-size:1.15rem; font-weight:800; color:var(--success); margin-top:2px;">Rs. ${invAmount} <span style="font-size:0.75rem; font-weight:500; color:var(--text-secondary);">&bull; ${methodLabel}</span></div>
+                </div>
+                <span class="badge badge-success" style="font-size:0.8rem; font-weight:700; padding:5px 10px;"><i data-lucide="check" width="12" height="12" style="display:inline;vertical-align:middle;margin-right:3px;"></i> Paid & Completed</span>
+              </div>`;
             
-            payButton = '<button class="btn btn-outline btn-sm btn-view-receipt" ' +
-              'data-invoice-id="' + inv.id + '" ' +
-              'data-receipt-no="' + (inv.receipt_number || ('REC-JOB-' + inv.id)) + '" ' +
-              'data-amount="' + rawAmt + '" ' +
-              'data-job-title="' + safeTitle + '" ' +
-              'data-worker-name="' + workerName + '" ' +
-              'data-date="' + (inv.paid_at || j.created_at || 'Recently') + '" ' +
-              'data-method="' + (inv.payment_method || 'online') + '">' +
-              '<i data-lucide="receipt" width="14" height="14"></i> View Digital Receipt</button>';
+            payButton = `<button class="btn btn-outline btn-sm btn-view-receipt" 
+              data-invoice-id="${inv.id}" 
+              data-receipt-no="${inv.receipt_number || ('REC-JOB-' + inv.id)}" 
+              data-amount="${rawAmt}" 
+              data-job-title="${safeTitle}" 
+              data-worker-name="${workerName}" 
+              data-date="${inv.paid_at || j.created_at || 'Recently'}" 
+              data-method="${inv.payment_method || 'online'}">
+              <i data-lucide="receipt" width="14" height="14"></i> View Digital Receipt</button>`;
           }
         }
         
-        return '<div class="job-card" data-status="' + status + '">' +
-          '<div class="job-card-header"><h3 class="job-card-title">' + j.title + '</h3><span class="badge ' + statusClass + '">' + statusLabel + '</span></div>' +
-          '<div class="job-card-meta"><span><i data-lucide="map-pin" width="14" height="14"></i> ' + (j.address || 'Colombo') + '</span><span><i data-lucide="clock" width="14" height="14"></i> ' + (j.created_at || 'Recently') + '</span><span><i data-lucide="tag" width="14" height="14"></i> ' + (j.category_name || 'Service') + '</span></div>' +
-          '<p class="job-card-desc">' + j.description + '</p>' +
-          invoiceBanner +
-          '<div class="job-card-actions" style="margin-top: 14px;">' +
-            payButton +
-            '<a href="../messages.html?job_id=' + j.id + '" class="btn btn-outline btn-sm"><i data-lucide="message-square" width="14" height="14"></i> Messages</a>' +
-            (status === 'open' ? '<button class="btn btn-ghost btn-sm cancel-job-btn" style="color:var(--error);"><i data-lucide="x" width="14" height="14"></i> Cancel Request</button>' : '') +
-          '</div>' +
-        '</div>';
+        return `
+          <div class="job-card" data-status="${status}">
+            <div class="job-card-header"><h3 class="job-card-title">${j.title}</h3><span class="badge ${statusClass}">${statusLabel}</span></div>
+            <div class="job-card-meta"><span><i data-lucide="map-pin" width="14" height="14"></i> ${j.address || 'Colombo'}</span><span><i data-lucide="clock" width="14" height="14"></i> ${j.created_at || 'Recently'}</span><span><i data-lucide="tag" width="14" height="14"></i> ${j.category_name || 'Service'}</span></div>
+            <p class="job-card-desc">${j.description}</p>
+            ${invoiceBanner}
+            <div class="job-card-actions" style="margin-top: 14px;">
+              ${payButton}
+              <a href="../messages.html?job_id=${j.id}" class="btn btn-outline btn-sm"><i data-lucide="message-square" width="14" height="14"></i> Messages</a>
+              ${status === 'open' ? `<button class="btn btn-ghost btn-sm cancel-job-btn" style="color:var(--error);"><i data-lucide="x" width="14" height="14"></i> Cancel Request</button>` : ''}
+            </div>
+          </div>`;
       }).join('');
 
       container.innerHTML = jobsHtml;

@@ -780,22 +780,23 @@ async function loadOpenJobsForWorker() {
         var jId = j.id || '';
         var safeTitle = (j.title || 'Job Request').replace(/"/g, '&quot;');
 
-        return '<div class="job-card">' +
-          '<div class="job-card-header"><h3 class="job-card-title">' + j.title + '</h3><span class="badge badge-open">Active</span></div>' +
-          '<div class="job-card-meta">' +
-            '<span><i data-lucide="user" width="14" height="14"></i> ' + (j.customer_name || 'Customer') + '</span>' +
-            '<span><i data-lucide="map-pin" width="14" height="14"></i> ' + addr + '</span>' +
-            '<span><i data-lucide="clock" width="14" height="14"></i> ' + (j.created_at || 'Recently') + '</span>' +
-            '<span><i data-lucide="tag" width="14" height="14"></i> ' + (j.category_name || 'Service') + '</span>' +
-          '</div>' +
-          '<p class="job-card-desc">' + j.description + '</p>' +
-          '<div class="job-card-actions">' +
-            '<a href="../messages.html?user_id=' + custId + '&job_id=' + jId + '" class="btn btn-primary btn-sm"><i data-lucide="message-square" width="14" height="14"></i> Message Customer</a>' +
-            '<button class="btn btn-success btn-sm btn-open-invoice-modal" data-job-id="' + jId + '" data-job-title="' + safeTitle + '" style="font-weight:600;"><i data-lucide="check-circle" width="14" height="14"></i> Mark Done & Set Price</button>' +
-            '<button class="btn btn-outline btn-sm btn-view-job-map" data-lat="' + lat + '" data-lng="' + lng + '" data-address="' + addr + '" data-title="' + safeTitle + '" data-customer-id="' + custId + '" data-job-id="' + jId + '"><i data-lucide="map-pin" width="14" height="14"></i> Map</button>' +
-            (j.customer_phone ? '<a href="tel:' + j.customer_phone + '" class="btn btn-ghost btn-sm"><i data-lucide="phone" width="14" height="14"></i> Call</a>' : '') +
-          '</div>' +
-        '</div>';
+        return `
+          <div class="job-card">
+            <div class="job-card-header"><h3 class="job-card-title">${j.title}</h3><span class="badge badge-open">Active</span></div>
+            <div class="job-card-meta">
+              <span><i data-lucide="user" width="14" height="14"></i> ${j.customer_name || 'Customer'}</span>
+              <span><i data-lucide="map-pin" width="14" height="14"></i> ${addr}</span>
+              <span><i data-lucide="clock" width="14" height="14"></i> ${j.created_at || 'Recently'}</span>
+              <span><i data-lucide="tag" width="14" height="14"></i> ${j.category_name || 'Service'}</span>
+            </div>
+            <p class="job-card-desc">${j.description}</p>
+            <div class="job-card-actions">
+              <a href="../messages.html?user_id=${custId}&job_id=${jId}" class="btn btn-primary btn-sm"><i data-lucide="message-square" width="14" height="14"></i> Message Customer</a>
+              <button class="btn btn-success btn-sm btn-open-invoice-modal" data-job-id="${jId}" data-job-title="${safeTitle}" style="font-weight:600;"><i data-lucide="check-circle" width="14" height="14"></i> Mark Done & Set Price</button>
+              <button class="btn btn-outline btn-sm btn-view-job-map" data-lat="${lat}" data-lng="${lng}" data-address="${addr}" data-title="${safeTitle}" data-customer-id="${custId}" data-job-id="${jId}"><i data-lucide="map-pin" width="14" height="14"></i> Map</button>
+              ${j.customer_phone ? `<a href="tel:${j.customer_phone}" class="btn btn-ghost btn-sm"><i data-lucide="phone" width="14" height="14"></i> Call</a>` : ''}
+            </div>
+          </div>`;
       }).join('');
 
       grid.innerHTML = apiJobsHtml;
@@ -805,7 +806,7 @@ async function loadOpenJobsForWorker() {
         '<i data-lucide="inbox" style="width: 48px; height: 48px; color: var(--text-muted); margin: 0 auto 12px; display:block;"></i>' +
         '<h3 style="margin-bottom: 8px;">No Open Job Requests</h3>' +
         '<p style="color: var(--text-secondary);">There are currently no open customer requests matching your area.</p>' +
-      '</div>';
+        '</div>';
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
   } catch (err) {
@@ -826,27 +827,26 @@ async function loadMyServicesForWorker() {
       var servicesHtml = res.data.services.map(function(s) {
         var priceFormatted = parseFloat(s.price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         var pricingUnit = (s.pricing_type === 'starting_at') ? ' (Starting)' : ' (Job Rate)';
-        var safeTitle = (s.title || 'Service Listing').replace(/"/g, '&quot;');
-        var safeDesc = (s.description || '').replace(/"/g, '&quot;');
         var catName = s.category_name || 'General';
 
-        return '<div class="service-manage-card" data-service-id="' + s.id + '" style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; display:flex; flex-direction:column; justify-content:space-between; position:relative;">' +
-          '<div>' +
-            '<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">' +
-              '<span class="badge badge-open" style="font-size:0.8rem;"><i data-lucide="tag" width="12" height="12" style="display:inline;vertical-align:middle;margin-right:3px;"></i> ' + catName + '</span>' +
-              '<span style="font-weight:700; font-size:1.1rem; color:var(--primary);">Rs. ' + priceFormatted + ' <span style="font-size:0.8rem; font-weight:normal; color:var(--text-secondary);">' + pricingUnit + '</span></span>' +
-            '</div>' +
-            '<h3 style="margin:0 0 8px; font-size:1.15rem; color:var(--text-primary);">' + s.title + '</h3>' +
-            '<p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:16px; line-height:1.5;">' + (s.description || 'No description provided.') + '</p>' +
-            '<div style="display:flex; gap:12px; font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">' +
-              '<span><i data-lucide="map-pin" width="14" height="14" style="display:inline;vertical-align:middle;"></i> ' + (s.location || 'Colombo') + '</span>' +
-              '<span><i data-lucide="check-circle" width="14" height="14" style="display:inline;vertical-align:middle;color:var(--success);"></i> Active</span>' +
-            '</div>' +
-          '</div>' +
-          '<div style="display:flex; justify-content:flex-end; gap:8px; border-top:1px solid var(--border); padding-top:12px;">' +
-            '<button type="button" class="btn btn-outline btn-sm delete-service-btn" data-service-id="' + s.id + '" style="color:var(--error); border-color:rgba(239,68,68,0.3);"><i data-lucide="trash-2" width="14" height="14"></i> Delete</button>' +
-          '</div>' +
-        '</div>';
+        return `
+          <div class="service-manage-card" data-service-id="${s.id}" style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; display:flex; flex-direction:column; justify-content:space-between; position:relative;">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                <span class="badge badge-open" style="font-size:0.8rem;"><i data-lucide="tag" width="12" height="12" style="display:inline;vertical-align:middle;margin-right:3px;"></i> ${catName}</span>
+                <span style="font-weight:700; font-size:1.1rem; color:var(--primary);">Rs. ${priceFormatted} <span style="font-size:0.8rem; font-weight:normal; color:var(--text-secondary);">${pricingUnit}</span></span>
+              </div>
+              <h3 style="margin:0 0 8px; font-size:1.15rem; color:var(--text-primary);">${s.title}</h3>
+              <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:16px; line-height:1.5;">${s.description || 'No description provided.'}</p>
+              <div style="display:flex; gap:12px; font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+                <span><i data-lucide="map-pin" width="14" height="14" style="display:inline;vertical-align:middle;"></i> ${s.location || 'Colombo'}</span>
+                <span><i data-lucide="check-circle" width="14" height="14" style="display:inline;vertical-align:middle;color:var(--success);"></i> Active</span>
+              </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; border-top:1px solid var(--border); padding-top:12px;">
+              <button type="button" class="btn btn-outline btn-sm delete-service-btn" data-service-id="${s.id}" style="color:var(--error); border-color:rgba(239,68,68,0.3);"><i data-lucide="trash-2" width="14" height="14"></i> Delete</button>
+            </div>
+          </div>`;
       }).join('');
 
       container.innerHTML = servicesHtml;

@@ -53,7 +53,6 @@ document.addEventListener('DOMContentLoaded', function () {
   let activeContact = null;
   let allConversations = [];
   let pollInterval = null;
-  let pollAbortController = null;
   let lastMessageCount = -1;
   let isSending = false;
 
@@ -62,52 +61,30 @@ document.addEventListener('DOMContentLoaded', function () {
   // ---- Helper: Format Timestamp to HH:mm ----
   function formatTimeHHmm(dateStr) {
     if (!dateStr) return '';
-    try {
-      const parts = dateStr.split(/[- :]/);
-      let dateObj;
-      if (parts.length >= 5) {
-        dateObj = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5] || 0);
-      } else {
-        dateObj = new Date(dateStr);
-      }
-
-      if (isNaN(dateObj.getTime())) return dateStr;
-
-      const hours = String(dateObj.getHours()).padStart(2, '0');
-      const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-      return `${hours}:${minutes}`;
-    } catch (e) {
-      return dateStr;
-    }
+    const d = new Date(dateStr.replace(' ', 'T'));
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
+  const formatTime = formatTimeHHmm;
 
-  // Format short date for day separators
+  // Format short date for day separators (Today, Yesterday, Date)
   function formatDateLabel(dateStr) {
     if (!dateStr) return '';
-    try {
-      const parts = dateStr.split(/[- :]/);
-      let d;
-      if (parts.length >= 3) {
-        d = new Date(parts[0], parts[1] - 1, parts[2]);
-      } else {
-        d = new Date(dateStr);
-      }
+    const d = new Date(dateStr.replace(' ', 'T'));
+    if (isNaN(d.getTime())) return dateStr;
 
-      const today = new Date();
-      if (d.toDateString() === today.toDateString()) {
-        return 'Today';
-      }
-
-      const yesterday = new Date();
-      yesterday.setDate(today.getDate() - 1);
-      if (d.toDateString() === yesterday.toDateString()) {
-        return 'Yesterday';
-      }
-
-      return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
-    } catch (e) {
-      return dateStr;
+    const today = new Date();
+    if (d.toDateString() === today.toDateString()) {
+      return 'Today';
     }
+
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    if (d.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    }
+
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   // ---- Setup Sidebar Based on User Role ----
@@ -283,12 +260,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ---- Select a Conversation ----
   async function selectConversation(userId, jobId, knownUserObj) {
-    // Cancel any in-flight polling request from previous conversation
-    if (pollAbortController) {
-      pollAbortController.abort();
-      pollAbortController = null;
-    }
-
     activeUserId = parseInt(userId, 10);
     if (jobId) activeJobId = parseInt(jobId, 10);
 
@@ -392,8 +363,8 @@ document.addEventListener('DOMContentLoaded', function () {
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 
-  // ---- Load Thread Messages via API with AbortController Support ----
-  async function loadThreadMessages(scrollToBottom, signal) {
+  // ---- Load Thread Messages via API ----
+  async function loadThreadMessages(scrollToBottom) {
     if (!activeUserId || !chatMessages) return;
 
     try {
@@ -402,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function () {
         endpoint += '&job_id=' + activeJobId;
       }
 
-      const res = await apiFetch(endpoint, { signal: signal });
+      const res = await apiFetch(endpoint);
       if (res.ok && res.data && res.data.status === 'success') {
         const messages = res.data.messages || [];
 
@@ -424,9 +395,7 @@ document.addEventListener('DOMContentLoaded', function () {
         showToast('Session expired. Please log in again.', 'error');
       }
     } catch (err) {
-      if (err.name !== 'AbortError') {
-        console.error('Failed to load message thread from API:', err);
-      }
+      console.error('Failed to load message thread from API:', err);
     }
   }
 
@@ -614,19 +583,14 @@ document.addEventListener('DOMContentLoaded', function () {
   // Initial Load
   loadConversations(targetUserId ? parseInt(targetUserId, 10) : null);
 
-  // Safe Dynamic Polling: Fetch active conversation every 3.5 seconds using AbortController (only when page is visible)
+  // Dynamic Polling: Fetch active conversation every 3.5 seconds when page is visible
   pollInterval = setInterval(function () {
     if (document.visibilityState === 'visible' && activeUserId && !isSending) {
-      if (pollAbortController) {
-        pollAbortController.abort();
-      }
-      pollAbortController = new AbortController();
-      loadThreadMessages(false, pollAbortController.signal);
+      loadThreadMessages(false);
     }
   }, 3500);
 
   window.addEventListener('beforeunload', function () {
     if (pollInterval) clearInterval(pollInterval);
-    if (pollAbortController) pollAbortController.abort();
   });
 });
