@@ -10,6 +10,9 @@ switch ($action) {
     case 'create':
         $controller->create();
         break;
+    case 'count':
+        $controller->countOpen();
+        break;
     case 'list':
         $controller->listOpen();
         break;

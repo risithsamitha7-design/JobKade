@@ -420,7 +420,7 @@
 
         const [workersRes, jobsRes] = await Promise.all([
           apiFetch('workers.php?action=search'),
-          apiFetch('jobs.php?action=list')
+          apiFetch('jobs.php?action=count')
         ]);
 
         // If either API call fails, hide the stats row instead of showing fake numbers
@@ -438,16 +438,16 @@
           }
         } else {
           const workers = Array.isArray(workersRes.data.workers) ? workersRes.data.workers : [];
-          const jobs = Array.isArray(jobsRes.data.jobs) ? jobsRes.data.jobs : [];
+          const openJobs = typeof jobsRes.data.open_jobs === 'number' ? jobsRes.data.open_jobs : (parseInt(jobsRes.data.open_jobs, 10) || 0);
 
           // Workers stat: length of returned workers array
           if (workersStatEl) {
             workersStatEl.textContent = workers.length > 0 ? (workers.length + '+') : '0';
           }
 
-          // Jobs stat: length of returned jobs array
+          // Jobs stat: open_jobs count
           if (jobsStatEl) {
-            jobsStatEl.textContent = jobs.length > 0 ? (jobs.length + '+') : '0';
+            jobsStatEl.textContent = openJobs > 0 ? (openJobs + '+') : '0';
           }
 
           // Rating stat: compute real average from workers' rating_avg, otherwise drop it

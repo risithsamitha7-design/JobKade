@@ -37,25 +37,36 @@ class JobController {
         }
     }
 
+    public function countOpen(): void {
+        $jobs = $this->jobService->getOpenJobs();
+        sendJsonResponse(200, [
+            'status'    => 'success',
+            'open_jobs' => count($jobs)
+        ]);
+    }
+
     public function listOpen(): void {
         $user = JWT::getAuthUser();
-        $hasAccess = true;
-        $workerProfileId = null;
-        if ($user && ($user['role'] ?? '') === 'worker') {
-            $workerId = (int)(!empty($user['worker_id']) ? $user['worker_id'] : 0);
-            if ($workerId <= 0) {
-                $wp = $this->workerRepo->getProfileByUserId((int)$user['user_id']);
-                $workerId = $wp ? (int)$wp['id'] : 0;
-            }
-            if ($workerId <= 0 || !$this->workerRepo->isVerified($workerId)) {
-                sendJsonResponse(403, [
-                    'status'  => 'error',
-                    'message' => 'Your worker account must be verified by an administrator before you can view customer job requests.'
-                ]);
-            }
-            $hasAccess = (new WalletRepository())->hasJobAccess($workerId);
-            $workerProfileId = $workerId;
+        if (!$user || ($user['role'] ?? '') !== 'worker') {
+            sendJsonResponse(403, [
+                'status'  => 'error',
+                'message' => 'Worker authorization required.'
+            ]);
         }
+
+        $workerId = (int)(!empty($user['worker_id']) ? $user['worker_id'] : 0);
+        if ($workerId <= 0) {
+            $wp = $this->workerRepo->getProfileByUserId((int)($user['user_id'] ?? 0));
+            $workerId = $wp ? (int)$wp['id'] : 0;
+        }
+        if ($workerId <= 0 || !$this->workerRepo->isVerified($workerId)) {
+            sendJsonResponse(403, [
+                'status'  => 'error',
+                'message' => 'Your worker account must be verified by an administrator before you can view customer job requests.'
+            ]);
+        }
+        $hasAccess = (new WalletRepository())->hasJobAccess($workerId);
+        $workerProfileId = $workerId;
 
         $catId = isset($_GET['category_id']) ? (int)$_GET['category_id'] : null;
         $district = isset($_GET['district']) && $_GET['district'] !== '' ? trim((string)$_GET['district']) : null;
@@ -123,8 +134,20 @@ class JobController {
 
     public function details(int $jobId): void {
         $user = JWT::getAuthUser();
-        if ($user && ($user['role'] ?? '') === 'worker') {
-            $workerId = (int)(!empty($user['worker_id']) ? $user['worker_id'] : ($user['user_id'] ?? 0));
+        if (!$user) {
+            sendJsonResponse(403, [
+                'status'  => 'error',
+                'message' => 'Authorization required.'
+            ]);
+        }
+
+        $role = $user['role'] ?? '';
+        if ($role === 'worker') {
+            $workerId = (int)(!empty($user['worker_id']) ? $user['worker_id'] : 0);
+            if ($workerId <= 0) {
+                $wp = $this->workerRepo->getProfileByUserId((int)($user['user_id'] ?? 0));
+                $workerId = $wp ? (int)$wp['id'] : 0;
+            }
             if ($workerId <= 0 || !$this->workerRepo->isVerified($workerId)) {
                 sendJsonResponse(403, [
                     'status'  => 'error',
@@ -137,6 +160,23 @@ class JobController {
         if (!$job) {
             sendJsonResponse(404, ['status' => 'error', 'message' => 'Job not found.']);
         }
+
+        if ($role === 'customer') {
+            $jobCustomerId = (int)($job['customer_id'] ?? 0);
+            $currentUserId = (int)($user['user_id'] ?? 0);
+            if ($jobCustomerId !== $currentUserId) {
+                sendJsonResponse(403, [
+                    'status'  => 'error',
+                    'message' => 'You are not authorized to view this job request.'
+                ]);
+            }
+        } elseif ($role !== 'worker' && $role !== 'admin') {
+            sendJsonResponse(403, [
+                'status'  => 'error',
+                'message' => 'Authorization required.'
+            ]);
+        }
+
         $invoice = $this->invoiceService->getJobInvoice($jobId);
         sendJsonResponse(200, [
             'status'  => 'success',

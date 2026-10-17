@@ -1117,15 +1117,41 @@ paths:
   # ==========================================
   # JOBS
   # ==========================================
+  /jobs.php?action=count:
+    get:
+      tags:
+        - Jobs
+      summary: Get total count of open maintenance jobs
+      description: |
+        **Allowed Role**: Public (No authentication required)
+        
+        Returns the current count of open customer jobs for visitor hero statistics.
+      responses:
+        '200':
+          description: Open jobs count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  open_jobs:
+                    type: integer
+                    example: 12
+
   /jobs.php?action=list:
     get:
       tags:
         - Jobs
       summary: Browse open maintenance jobs
       description: |
-        **Allowed Role**: Public or Worker (Optional Bearer token)
+        **Allowed Role**: Worker (Bearer token required)
         
-        Lists open customer maintenance jobs. If called by a verified worker with active job access pass or active subscription, unmasked customer contact numbers are provided.
+        Lists open customer maintenance jobs for verified workers. Returns 403 if unauthenticated, non-worker, or unverified. If worker does not have active marketplace access, phone numbers are masked.
+      security:
+        - bearerAuth: []
       parameters:
         - name: category_id
           in: query
@@ -1309,9 +1335,11 @@ paths:
         - Jobs
       summary: Get complete job details and active invoice
       description: |
-        **Allowed Role**: Customer, Worker, or Admin (Optional Bearer token; unverified workers are restricted)
+        **Allowed Role**: Customer (own jobs only), Verified Worker, or Admin (Bearer token required)
         
         Returns single job metadata, bidding worker applications, and payment invoice details.
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: query
