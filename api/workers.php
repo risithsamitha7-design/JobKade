@@ -24,17 +24,6 @@ switch ($action) {
             $controller->getCoverage();
         }
         break;
-    case 'add-service':
-    case 'create-service':
-        $controller->addService();
-        break;
-    case 'my-services':
-    case 'services':
-        $controller->myServices();
-        break;
-    case 'delete-service':
-        $controller->deleteService();
-        break;
     case 'upload-photo':
     case 'upload-profile-picture':
         require_once __DIR__ . '/../controllers/AuthController.php';

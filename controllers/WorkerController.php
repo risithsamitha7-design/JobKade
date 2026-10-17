@@ -100,29 +100,5 @@ class WorkerController {
             sendJsonResponse(400, ['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
-
-    public function addService(): void {
-        sendJsonResponse(403, [
-            'status'  => 'error', 
-            'message' => 'Services cannot be added after registration. Services are configured during registration only.'
-        ]);
-    }
-
-    public function myServices(): void {
-        $user = JWT::getAuthUser();
-        if (!$user || $user['role'] !== 'worker' || empty($user['worker_id'])) {
-            sendJsonResponse(403, ['status' => 'error', 'message' => 'Only workers can view their services.']);
-        }
-
-        $list = $this->workerService->getMyServices((int)$user['worker_id']);
-        $services = isset($list['services']) ? $list['services'] : $list;
-        sendJsonResponse(200, ['status' => 'success', 'services' => $services]);
-    }
-
-    public function deleteService(): void {
-        sendJsonResponse(403, [
-            'status'  => 'error', 
-            'message' => 'Services cannot be deleted after registration. Services are configured during registration only.'
-        ]);
-    }
 }
+

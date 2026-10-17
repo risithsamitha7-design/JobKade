@@ -7,7 +7,14 @@ class JWT {
 
     private static function getSecretKey(): string {
         if (self::$secretKey === '') {
-            self::$secretKey = (string)(getenv('JOBKADE_JWT_SECRET') ?: 'JobKade_Super_Secure_Secret_Key_2026_ICBT_CSE5015!');
+            $secret = getenv('JOBKADE_JWT_SECRET');
+            if ($secret === false || trim((string)$secret) === '') {
+                $secret = $_ENV['JOBKADE_JWT_SECRET'] ?? ($_SERVER['JOBKADE_JWT_SECRET'] ?? '');
+            }
+            if (!is_string($secret) || trim($secret) === '') {
+                throw new Exception('JWT secret key is not set. Please configure the JOBKADE_JWT_SECRET environment variable.');
+            }
+            self::$secretKey = trim($secret);
         }
         return self::$secretKey;
     }

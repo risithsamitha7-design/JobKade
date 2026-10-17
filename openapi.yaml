@@ -190,51 +190,6 @@ paths:
         '409':
           $ref: '#/components/responses/409Conflict'
 
-  /register.php:
-    post:
-      deprecated: true
-      tags:
-        - Auth
-      summary: Direct endpoint for user registration (Deprecated)
-      description: |
-        **Allowed Role**: Public (No authentication required)
-        
-        *(Deprecated: Use `/auth.php?action=register` instead.)* Direct alias routing directly to `AuthController::register()`.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - full_name
-                - email
-                - password
-                - phone
-              properties:
-                full_name:
-                  type: string
-                  example: Jane Doe
-                email:
-                  type: string
-                  example: jane@gmail.com
-                password:
-                  type: string
-                  example: secret123
-                phone:
-                  type: string
-                  example: "+94711122334"
-                role:
-                  type: string
-                  enum: [customer, worker]
-                  default: customer
-      responses:
-        '201':
-          description: User registered successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthSuccessResponse'
 
   /auth.php?action=login:
     post:
@@ -275,39 +230,6 @@ paths:
         '401':
           $ref: '#/components/responses/401Unauthorized'
 
-  /login.php:
-    post:
-      deprecated: true
-      tags:
-        - Auth
-      summary: Direct endpoint for user login (Deprecated)
-      description: |
-        **Allowed Role**: Public (No authentication required)
-        
-        *(Deprecated: Use `/auth.php?action=login` instead.)* Direct alias routing directly to `AuthController::login()`.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - email
-                - password
-              properties:
-                email:
-                  type: string
-                  example: customer@gmail.com
-                password:
-                  type: string
-                  example: customer@123
-      responses:
-        '200':
-          description: Login successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthSuccessResponse'
 
   /auth.php?action=me:
     get:

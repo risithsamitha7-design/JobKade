@@ -144,7 +144,7 @@ function isItemActive(item, currentPath, currentFile, role) {
     if (item.label === 'My Profile') return currentFile === 'profile.html';
   } else if (role === 'admin') {
     if (item.label === 'Analytics') return ['dashboard.html', 'index.html', 'admin', ''].includes(currentFile);
-    if (item.label === 'KYC Moderation') return ['kyc-moderation.html', 'verification.html'].includes(currentFile);
+    if (item.label === 'KYC Moderation') return currentFile === 'kyc-moderation.html';
     if (item.label === 'Manage Workers') return currentFile === 'workers.html';
     if (item.label === 'Manage Customers') return currentFile === 'customers.html';
     if (item.label === 'Job Requests') return currentFile === 'jobs.html';

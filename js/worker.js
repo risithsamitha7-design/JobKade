@@ -92,41 +92,6 @@ const SRI_LANKA_DISTRICTS = {
 };
 
 function initServiceManagement() {
-  let activeServiceCard = null;
-  let activeServiceId = null;
-
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.delete-service-btn');
-    if (btn) {
-      activeServiceCard = btn.closest('.service-manage-card, .service-card, tr, .job-card');
-      activeServiceId = btn.getAttribute('data-service-id') || activeServiceCard?.getAttribute('data-service-id');
-      openModal('delete-service-modal');
-    }
-  });
-
-  $id('confirm-delete-service')?.addEventListener('click', async () => {
-    closeModal('delete-service-modal');
-    if (activeServiceId) {
-      try {
-        const res = await apiFetch('workers.php?action=delete-service', {
-          method: 'POST',
-          body: JSON.stringify({ service_id: parseInt(activeServiceId, 10) })
-        });
-        showToast(res.ok && res.data?.status === 'success' ? 'Service deleted successfully.' : (res.data?.message || 'Service removed.'), 'info');
-      } catch (err) {
-        showToast('Service deleted locally.', 'info');
-      }
-    } else {
-      showToast('Service deleted.', 'info');
-    }
-
-    if (activeServiceCard) {
-      activeServiceCard.style.opacity = '0';
-      activeServiceCard.style.transition = 'all 0.3s ease';
-      setTimeout(() => activeServiceCard.remove(), 300);
-    }
-  });
-
   // Initialize Map Pin Picker for Add Service
   const mapContainer = $id('service-location-map');
   let serviceMap = null;
@@ -211,78 +176,6 @@ function initServiceManagement() {
         serviceMap?.setView([dLat, dLng], 12);
         serviceMarker?.openPopup();
       }
-    });
-  }
-
-  const serviceForm = $id('service-form');
-  if (serviceForm) {
-    serviceForm.addEventListener('submit', async function (e) {
-      e.preventDefault();
-      clearFormErrors(this);
-
-      const titleInput = $id('service-title-input') || this.querySelector('[name="service-title"], input[type="text"]');
-      const catSelect = $id('service-category-input') || this.querySelector('select');
-      const descInput = $id('service-desc-input') || this.querySelector('textarea');
-      const priceInput = $id('service-price-input') || this.querySelector('input[type="number"]');
-      const districtSelect = $id('service-district-input');
-      const latInput = $id('service-latitude');
-      const lngInput = $id('service-longitude');
-
-      const title = titleInput?.value.trim() || '';
-      const price = parseFloat(priceInput?.value || 0);
-      const district = districtSelect?.value || '';
-
-      let isValid = true;
-      if (!title || title.length < 3) {
-        showFieldError(titleInput, 'Service title is required (at least 3 characters).');
-        isValid = false;
-      }
-      if (isNaN(price) || price < 0) {
-        showFieldError(priceInput, 'Please specify a valid starting price (minimum 0).');
-        isValid = false;
-      }
-      if (catSelect && !catSelect.value) {
-        showFieldError(catSelect, 'Please select a service category.');
-        isValid = false;
-      }
-      if (districtSelect && !district) {
-        showFieldError(districtSelect, 'Please select a service location district.');
-        isValid = false;
-      }
-      if (!isValid) {
-        showToast('Please fix the errors in the form.', 'error');
-        return;
-      }
-
-      const submitBtn = $id('btn-save-service') || this.querySelector('button[type="submit"]');
-      await withBtnLoading(submitBtn, '<i data-lucide="loader" width="18" height="18" class="spin"></i> Saving...', async () => {
-        try {
-          const res = await apiFetch('workers.php?action=add-service', {
-            method: 'POST',
-            body: JSON.stringify({
-              title,
-              category_id: catSelect ? parseInt(catSelect.value, 10) : null,
-              description: descInput?.value.trim() || title,
-              price,
-              pricing_type: 'starting_at',
-              district: district || 'Colombo',
-              location: district || 'Colombo',
-              latitude: latInput?.value ? parseFloat(latInput.value) : curLat,
-              longitude: lngInput?.value ? parseFloat(lngInput.value) : curLng
-            })
-          });
-
-          if (res.ok && res.data?.status === 'success') {
-            showToast('Service saved successfully!', 'success');
-            setTimeout(() => { window.location.href = 'my-services.html'; }, 1000);
-          } else {
-            showToast(res.data?.message || 'Could not save service. Please try again.', 'error');
-          }
-        } catch (err) {
-          console.error('Failed to save service:', err);
-          showToast('Could not save service. Please try again.', 'error');
-        }
-      });
     });
   }
 

@@ -25,7 +25,7 @@
           <div class="avatar-wrapper-relative">
             <div class="avatar-upload-container" id="customer-avatar-clickable" title="Click on profile image to upload new photo">
               <img id="customer-avatar-img" class="avatar-img-preview" src="" alt="Customer Photo" style="display:none;">
-              <div class="avatar-initials-fallback avatar-blue" id="customer-avatar-initials">D</div>
+              <div class="avatar-initials-fallback avatar-blue" id="customer-avatar-initials">-</div>
               <div class="avatar-hover-scrim">
                 <i data-lucide="camera" width="24" height="24"></i>
                 <span style="font-size:0.7rem; font-weight:700; margin-top:4px; letter-spacing:0.5px; text-transform:uppercase;">Change</span>
@@ -37,8 +37,8 @@
             <input type="file" id="customer-photo-upload" accept="image/png, image/jpeg, image/jpg, image/webp" style="display:none;">
           </div>
           <div>
-            <h3 id="customer-profile-name-heading">Dinil Sandaruwan</h3>
-            <p class="text-sm text-secondary" id="customer-profile-email-heading">dinil@email.com</p>
+            <h3 id="customer-profile-name-heading">Loading...</h3>
+            <p class="text-sm text-secondary" id="customer-profile-email-heading">Loading...</p>
             <span style="font-size:0.78rem; color:var(--text-secondary); cursor:pointer; margin-top:4px; display:inline-block;" id="customer-avatar-hint">
               <i data-lucide="upload" width="12" height="12" style="vertical-align:middle; margin-right:3px;"></i> Click photo to change
             </span>
@@ -50,20 +50,20 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Full Name *</label>
-              <input type="text" id="customer-name-input" class="form-input" value="Dinil Sandaruwan" required>
+              <input type="text" id="customer-name-input" class="form-input" placeholder="Loading..." required>
             </div>
             <div class="form-group">
               <label class="form-label">Phone Number *</label>
-              <input type="tel" id="customer-phone-input" class="form-input" value="+94 77 123 4567" required>
+              <input type="tel" id="customer-phone-input" class="form-input" placeholder="Loading..." required>
             </div>
           </div>
           <div class="form-group">
             <label class="form-label">Email Address (Read-only)</label>
-            <input type="email" id="customer-email-input" class="form-input" value="dinil@email.com" readonly style="background:var(--bg-alt); opacity:0.85;">
+            <input type="email" id="customer-email-input" class="form-input" placeholder="Loading..." readonly style="background:var(--bg-alt); opacity:0.85;">
           </div>
           <div class="form-group">
             <label class="form-label">Location / Address</label>
-            <input type="text" id="customer-address-input" class="form-input" value="Colombo 05" placeholder="e.g. Colombo 05, Western Province">
+            <input type="text" id="customer-address-input" class="form-input" placeholder="e.g. Colombo 05, Western Province">
           </div>
 
           <h4 style="margin: 24px 0 12px; font-size: 1rem; color: var(--text-primary);"><i data-lucide="lock" width="16" height="16" style="display:inline;vertical-align:middle;color:var(--warning);margin-right:4px;"></i> Security & Password (Optional)</h4>
