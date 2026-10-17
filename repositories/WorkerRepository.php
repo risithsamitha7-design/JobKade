@@ -152,10 +152,10 @@ class WorkerRepository {
         $stmt = $this->db->prepare("
             SELECT verify_status, is_verified 
             FROM worker_profiles 
-            WHERE id = :wid OR user_id = :uid 
+            WHERE id = :wid 
             LIMIT 1
         ");
-        $stmt->execute([':wid' => $workerId, ':uid' => $workerId]);
+        $stmt->execute([':wid' => $workerId]);
         $row = $stmt->fetch();
         if (!$row) {
             return false;

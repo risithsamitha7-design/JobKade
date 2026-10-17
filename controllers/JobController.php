@@ -54,19 +54,20 @@ class JobController {
             ]);
         }
 
-        $workerId = (int)(!empty($user['worker_id']) ? $user['worker_id'] : 0);
-        if ($workerId <= 0) {
+        $workerProfileId = (int)(!empty($user['worker_id']) ? $user['worker_id'] : 0);
+        if ($workerProfileId <= 0) {
             $wp = $this->workerRepo->getProfileByUserId((int)($user['user_id'] ?? 0));
-            $workerId = $wp ? (int)$wp['id'] : 0;
+            $workerProfileId = $wp ? (int)$wp['id'] : 0;
         }
-        if ($workerId <= 0 || !$this->workerRepo->isVerified($workerId)) {
+
+        if ($workerProfileId <= 0 || !$this->workerRepo->isVerified($workerProfileId)) {
             sendJsonResponse(403, [
                 'status'  => 'error',
                 'message' => 'Your worker account must be verified by an administrator before you can view customer job requests.'
             ]);
         }
-        $hasAccess = (new WalletRepository())->hasJobAccess($workerId);
-        $workerProfileId = $workerId;
+
+        $hasAccess = (new WalletRepository())->hasJobAccess($workerProfileId);
 
         $catId = isset($_GET['category_id']) ? (int)$_GET['category_id'] : null;
         $district = isset($_GET['district']) && $_GET['district'] !== '' ? trim((string)$_GET['district']) : null;
@@ -143,12 +144,12 @@ class JobController {
 
         $role = $user['role'] ?? '';
         if ($role === 'worker') {
-            $workerId = (int)(!empty($user['worker_id']) ? $user['worker_id'] : 0);
-            if ($workerId <= 0) {
+            $workerProfileId = (int)(!empty($user['worker_id']) ? $user['worker_id'] : 0);
+            if ($workerProfileId <= 0) {
                 $wp = $this->workerRepo->getProfileByUserId((int)($user['user_id'] ?? 0));
-                $workerId = $wp ? (int)$wp['id'] : 0;
+                $workerProfileId = $wp ? (int)$wp['id'] : 0;
             }
-            if ($workerId <= 0 || !$this->workerRepo->isVerified($workerId)) {
+            if ($workerProfileId <= 0 || !$this->workerRepo->isVerified($workerProfileId)) {
                 sendJsonResponse(403, [
                     'status'  => 'error',
                     'message' => 'Your worker account must be verified by an administrator before you can view customer job requests.'
